@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build & test (x86_64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ALSA headers (needed by rodio in the client example)
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - name: Check formatting
+        run: cargo fmt --check
+      - name: Build all targets
+        run: cargo build --all-targets
+      - name: Clippy (warnings are errors)
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Run tests
+        run: cargo test
+
+  cross-aarch64:
+    name: Cross-compile daemon (aarch64)
+    runs-on: ubuntu-latest
+    env:
+      # Ubuntu's cross gcc instead of the rpi3 toolchain named in .cargo/config.toml;
+      # the env var takes precedence over the config file.
+      CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install aarch64 cross toolchain
+        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-gnu
+      - uses: Swatinem/rust-cache@v2
+      - name: Build daemon for whale tag
+        run: cargo build --bin daemon --target aarch64-unknown-linux-gnu --release
+      - name: Upload daemon binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: daemon-aarch64
+          path: target/aarch64-unknown-linux-gnu/release/daemon

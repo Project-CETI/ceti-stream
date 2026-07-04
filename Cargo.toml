@@ -17,7 +17,3 @@ path = "src/daemon/main.rs"
 
 [[example]]
 name = "client"
-
-[[bin]]
-name = "hello"
-path = "src/hello/main.rs"
