@@ -20,6 +20,7 @@ mod audio;
 mod ecg;
 mod fwd_thread;
 mod subscription;
+mod worker;
 
 use ceti::*;
 
@@ -99,47 +100,61 @@ fn main() -> std::io::Result<()>{
         {
             let sub_addr = audio_sub_address.clone();
             let stop_flag = stop_flag.clone();
-            thread::spawn(move || audio::tx_thread(sub_addr, stop_flag))
+            worker::spawn("Audio", move || audio::tx_thread(sub_addr, stop_flag))
         },
         {
             let sub_addr = ecg_sub_address.clone();
             let stop_flag = stop_flag.clone();
-            thread::spawn(move || ecg::tx_thread(sub_addr, stop_flag))
+            worker::spawn("ECG", move || ecg::tx_thread(sub_addr, stop_flag))
         },
         {
             let sub_addr = battery_sub_address.clone();
             let stop_flag = stop_flag.clone();
-            thread::spawn(move ||  BATTERY_FORWARDER.create()(sub_addr, stop_flag))
+            worker::spawn(BATTERY_FORWARDER.name, move || {
+                BATTERY_FORWARDER.create()(sub_addr, stop_flag)
+            })
         },
         {
             let sub_addr = imu_quat_sub_address.clone();
             let stop_flag = stop_flag.clone();
-            thread::spawn(move ||  IMU_QUAT_FORWARDER.create()(sub_addr, stop_flag))
+            worker::spawn(IMU_QUAT_FORWARDER.name, move || {
+                IMU_QUAT_FORWARDER.create()(sub_addr, stop_flag)
+            })
         },
         {
             let sub_addr = imu_accel_sub_address.clone();
             let stop_flag = stop_flag.clone();
-            thread::spawn(move ||  IMU_ACCEL_FORWARDER.create()(sub_addr, stop_flag))
+            worker::spawn(IMU_ACCEL_FORWARDER.name, move || {
+                IMU_ACCEL_FORWARDER.create()(sub_addr, stop_flag)
+            })
         },
         {
             let sub_addr = imu_gyro_sub_address.clone();
             let stop_flag = stop_flag.clone();
-            thread::spawn(move ||  IMU_GYRO_FORWARDER.create()(sub_addr, stop_flag))
+            worker::spawn(IMU_GYRO_FORWARDER.name, move || {
+                IMU_GYRO_FORWARDER.create()(sub_addr, stop_flag)
+            })
         },
         {
             let sub_addr = imu_mag_sub_address.clone();
             let stop_flag = stop_flag.clone();
-            thread::spawn(move ||  IMU_MAG_FORWARDER.create()(sub_addr, stop_flag))
+            worker::spawn(IMU_MAG_FORWARDER.name, move || {
+                IMU_MAG_FORWARDER.create()(sub_addr, stop_flag)
+            })
         },
         {
             let sub_addr = light_sub_address.clone();
             let stop_flag = stop_flag.clone();
-            thread::spawn(move ||  LIGHT_FORWARDER.create()(sub_addr, stop_flag))
+            worker::spawn(LIGHT_FORWARDER.name, move || {
+                LIGHT_FORWARDER.create()(sub_addr, stop_flag)
+            })
         },
         {
             let sub_addr = pressure_sub_address.clone();
             let stop_flag = stop_flag.clone();
-            thread::spawn(move ||  PRESSURE_FORWARDER.create()(sub_addr, stop_flag))
+            worker::spawn(PRESSURE_FORWARDER.name, move || {
+                PRESSURE_FORWARDER.create()(sub_addr, stop_flag)
+            })
         },
     ];
 
