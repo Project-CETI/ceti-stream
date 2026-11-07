@@ -43,6 +43,33 @@ Guarentee `ceti-tag-data-capture.service` is running on the tag prior to running
 
      ``` cargo build --bin daemon --target aarch64-unknown-linux-gnu ```
 
+## Offline worker-reporting tests
+
+Run these commands from the repository root with a host Rust compiler and linker
+installed (`rustc` on `PATH`, or `RUSTC` set for the compiler used by the startup
+smoke test). No Cargo dependencies or whale-tag hardware are needed.
+
+On Linux/macOS:
+
+```sh
+rustc --edition=2021 --test -D warnings tests/worker_reporting.rs -o worker_reporting_test
+./worker_reporting_test
+```
+
+On Windows (PowerShell, with a linker available for the installed Rust toolchain):
+
+```powershell
+rustc --edition=2021 --test -D warnings tests/worker_reporting.rs -o worker_reporting_test.exe
+.\worker_reporting_test.exe
+```
+
+Expected result: five tests pass and one subprocess fixture is intentionally
+ignored. The fixture is exercised by its parent test; do not run it separately
+with `--ignored`. The suite compiles a synthetic daemon and uses temporary files
+and an ephemeral loopback TCP port. It checks worker-error reporting and control
+responsiveness with synthetic hardware workers, not real tag hardware,
+shared-memory/semaphore behavior, Linux/ARM runtime, or graceful daemon shutdown.
+
 ## ToDo
 - wrap daemon executable in systemd service with  `ceti-tag-data-capture.service` as a requirement.
 - finish implementing tcp commands
